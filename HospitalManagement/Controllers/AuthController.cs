@@ -70,7 +70,6 @@ namespace HospitalManagement.Controllers
         }
     }
 
-    // DTO for registering admin
     public class RegisterAdminDto
     {
         public string Email { get; set; }
@@ -79,7 +78,6 @@ namespace HospitalManagement.Controllers
 
     }
 
-    // DTO for registering receptionist
     public class RegisterReceptionistDto
     {
         public string Email { get; set; }

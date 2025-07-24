@@ -7,7 +7,7 @@ namespace HospitalManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-   // [Authorize(Roles = "Admin")] // فقط الأدمن يقدر يدخل هنا
+   // [Authorize(Roles = "Admin")] 
     public class DepartmentController : ControllerBase
     {
         private readonly IDepartmentService _departmentService;
