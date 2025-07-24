@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Data;
+﻿using AutoMapper;
+using HospitalManagement.Data;
 using HospitalManagement.DTOs;
 using HospitalManagement.Models;
 using Microsoft.AspNetCore.Identity;
@@ -12,29 +13,33 @@ namespace HospitalManagement.Services
         private readonly ILoggingService _loggingService;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMapper _mapper;
 
         public DepartmentService(
             ApplicationDbContext context,
             ILoggingService loggingService,
             IHttpContextAccessor httpContextAccessor,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IMapper mapper)
         {
             _context = context;
             _loggingService = loggingService;
             _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
+            _mapper = mapper;
+
         }
 
         public async Task<IEnumerable<DepartmentDTO>> GetAllDepartmentsAsync()
         {
             var departments = await _context.Departments.ToListAsync();
-            return departments.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<DepartmentDTO>>(departments);
         }
 
         public async Task<DepartmentDTO> GetDepartmentByIdAsync(int departmentId)
         {
             var department = await _context.Departments.FindAsync(departmentId);
-            return department != null ? MapToDTO(department) : null;
+            return department != null ? _mapper.Map<DepartmentDTO>(department) : null;
         }
 
         public async Task<DepartmentDTO> CreateDepartmentAsync(DepartmentDTO departmentDTO)
@@ -60,7 +65,7 @@ namespace HospitalManagement.Services
                 "Department created",
                 _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "");
 
-            return MapToDTO(department);
+            return _mapper.Map<DepartmentDTO>(department);
         }
 
         public async Task<DepartmentDTO> UpdateDepartmentAsync(int departmentId, DepartmentDTO departmentDTO)
@@ -88,7 +93,7 @@ namespace HospitalManagement.Services
                 "Department updated",
                 _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "");
 
-            return MapToDTO(department);
+            return _mapper.Map<DepartmentDTO>(department);
         }
 
         public async Task<bool> DeleteDepartmentAsync(int departmentId)
@@ -123,17 +128,7 @@ namespace HospitalManagement.Services
             return true;
         }
 
-        private DepartmentDTO MapToDTO(Department department)
-        {
-            return new DepartmentDTO
-            {
-                Id = department.Id,
-                Name = department.Name,
-                Description = department.Description,
-                Location = department.Location
-            };
-        }
-
+        
         private async Task<ApplicationUser> GetCurrentUser()
         {
             var user = await _userManager.GetUserAsync(_httpContextAccessor.HttpContext.User);

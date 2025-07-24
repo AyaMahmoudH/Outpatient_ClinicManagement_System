@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Data;
+﻿using AutoMapper;
+using HospitalManagement.Data;
 using HospitalManagement.DTOs;
 using HospitalManagement.Models;
 using Microsoft.AspNetCore.Identity;
@@ -11,15 +12,18 @@ namespace HospitalManagement.Services
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILoggingService _loggingService;
+        private readonly IMapper _mapper;
 
         public DoctorService(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            ILoggingService loggingService)
+            ILoggingService loggingService,
+              IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
             _loggingService = loggingService;
+            _mapper = mapper;
         }
         public async Task<IEnumerable<DoctorDTO>> GetAllDoctorsAsync()
         {
@@ -28,7 +32,7 @@ namespace HospitalManagement.Services
                 .Include(d => d.Department)
                 .ToListAsync();
 
-            return doctors.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<DoctorDTO>>(doctors);
         }
         public async Task<DoctorDTO> GetDoctorByIdAsync(int doctorId)
         {
@@ -37,7 +41,7 @@ namespace HospitalManagement.Services
                 .Include(d => d.Department)
                 .FirstOrDefaultAsync(d => d.Id == doctorId);
 
-            return doctor != null ? MapToDTO(doctor) : null;
+            return doctor != null ? _mapper.Map<DoctorDTO>(doctor) : null;
         }
         public async Task<DoctorDTO> GetDoctorByUserIdAsync(string userId)
         {
@@ -46,7 +50,7 @@ namespace HospitalManagement.Services
                 .Include(d => d.Department)
                 .FirstOrDefaultAsync(d => d.UserId == userId);
 
-            return doctor != null ? MapToDTO(doctor) : null;
+            return doctor != null ? _mapper.Map<DoctorDTO>(doctor) : null;
         }
         public async Task<IEnumerable<DoctorDTO>> GetDoctorsByDepartmentAsync(int departmentId)
         {
@@ -56,7 +60,7 @@ namespace HospitalManagement.Services
                 .Where(d => d.DepartmentId == departmentId)
                 .ToListAsync();
 
-            return doctors.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<DoctorDTO>>(doctors);
         }
         public async Task<DoctorDTO> CreateDoctorAsync(DoctorDTO doctorDTO)
         {
@@ -128,7 +132,7 @@ namespace HospitalManagement.Services
                 "Doctor profile updated",
                 "");
 
-            return MapToDTO(doctor);
+            return _mapper.Map<DoctorDTO>(doctor);
         }
 
         public async Task<bool> DeleteDoctorAsync(int doctorId)
@@ -170,22 +174,6 @@ namespace HospitalManagement.Services
             return true;
         }
 
-        private DoctorDTO MapToDTO(Doctor doctor)
-        {
-            return new DoctorDTO
-            {
-                Id = doctor.Id,
-                FirstName = doctor.User.FirstName,
-                LastName = doctor.User.LastName,
-                Email = doctor.User.Email,
-                PhoneNumber = doctor.User.PhoneNumber,
-                DepartmentId = doctor.DepartmentId,
-                DepartmentName = doctor.Department?.Name,
-                Specialization = doctor.Specialization,
-                Qualifications = doctor.Qualifications,
-                LicenseNumber = doctor.LicenseNumber,
-                IsAvailable = doctor.IsAvailable
-            };
-        }
+      
     }
 }

@@ -12,7 +12,6 @@
         public string PaymentMethod { get; set; }
         public string InvoiceNumber { get; set; }
 
-        // Navigation properties
         public ICollection<BillingItem> BillingItems { get; set; }
     }
 }

@@ -96,7 +96,6 @@ namespace HospitalManagement.Controllers
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> GetMyProfile()
         {
-            // استخراج UserId من التوكن
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))

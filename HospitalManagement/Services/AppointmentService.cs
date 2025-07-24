@@ -1,4 +1,5 @@
-﻿using HospitalManagement.Data;
+﻿using AutoMapper;
+using HospitalManagement.Data;
 using HospitalManagement.DTOs;
 using HospitalManagement.Models;
 using Microsoft.AspNetCore.Identity;
@@ -13,19 +14,22 @@ namespace HospitalManagement.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly INotificationService _notificationService;
+        private readonly IMapper _mapper;
 
         public AppointmentService(
             ApplicationDbContext context,
             ILoggingService loggingService,
             IHttpContextAccessor httpContextAccessor,
             UserManager<ApplicationUser> userManager,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IMapper mapper)
         {
             _context = context;
             _loggingService = loggingService;
             _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
             _notificationService = notificationService;
+            _mapper = mapper;
         }
 
         private async Task<ApplicationUser?> GetCurrentUser()
@@ -69,7 +73,7 @@ namespace HospitalManagement.Services
                     .ThenInclude(d => d.User)
                 .ToListAsync();
 
-            return appointments.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
 
         public async Task<AppointmentDTO> GetAppointmentByIdAsync(int appointmentId)
@@ -81,7 +85,7 @@ namespace HospitalManagement.Services
                     .ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(a => a.Id == appointmentId);
 
-            return appointment != null ? MapToDTO(appointment) : null;
+            return appointment != null ? _mapper.Map<AppointmentDTO>(appointment) : null;
         }
 
         public async Task<IEnumerable<AppointmentDTO>> GetAppointmentsByPatientIdAsync(int patientId)
@@ -94,7 +98,7 @@ namespace HospitalManagement.Services
                 .Where(a => a.PatientId == patientId)
                 .ToListAsync();
 
-            return appointments.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
 
         public async Task<IEnumerable<AppointmentDTO>> GetAppointmentsByDoctorIdAsync(int doctorId)
@@ -107,7 +111,7 @@ namespace HospitalManagement.Services
                 .Where(a => a.DoctorId == doctorId)
                 .ToListAsync();
 
-            return appointments.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
 
         public async Task<IEnumerable<AppointmentDTO>> GetAppointmentsByDateAsync(DateTime date)
@@ -120,7 +124,7 @@ namespace HospitalManagement.Services
                 .Where(a => a.AppointmentDate.Date == date.Date)
                 .ToListAsync();
 
-            return appointments.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<AppointmentDTO>>(appointments);
         }
 
         public async Task<AppointmentDTO> CreateAppointmentAsync(AppointmentDTO appointmentDTO)
@@ -237,21 +241,7 @@ namespace HospitalManagement.Services
             return true;
         }
 
-        private AppointmentDTO MapToDTO(Appointment appointment)
-        {
-            return new AppointmentDTO
-            {
-                Id = appointment.Id,
-                PatientId = (int)(appointment?.PatientId),
-                DoctorId = (int)appointment?.DoctorId,
-                AppointmentDate = appointment.AppointmentDate,
-                AppointmentTime = appointment.AppointmentTime,
-                Purpose = appointment.Purpose,
-                Notes = appointment.Notes,
-                Status = appointment.Status,
-                PatientName = appointment.Patient?.User?.FullName,
-                DoctorName = appointment.Doctor?.User?.FullName
-            };
-        }
+       
+        
     }
 }

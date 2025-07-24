@@ -7,8 +7,7 @@ namespace HospitalManagement.Services
     public class LoggingService : ILoggingService
     {
         private readonly ILogger<LoggingService> _logger;
-        private readonly List<ActivityLog> _activityLogs = new(); // مؤقت - بدل قاعدة البيانات
-
+        private readonly List<ActivityLog> _activityLogs = new(); 
         public LoggingService(ILogger<LoggingService> logger)
         {
             _logger = logger;
@@ -30,7 +29,7 @@ namespace HospitalManagement.Services
                 Timestamp = DateTime.UtcNow
             };
 
-            _activityLogs.Add(log); // في الواقع تكتبها في قاعدة بيانات
+            _activityLogs.Add(log); 
             _logger.LogInformation($"User {userName} performed {action} on {entityName} ({entityId}) from {ipAddress}");
 
             await Task.CompletedTask;
@@ -48,10 +47,6 @@ namespace HospitalManagement.Services
             return await Task.FromResult(result);
         }
 
-        // نسخة من الدالة اللي فيها object parameters – ممكن ترمي Exception أو تتجاهلها
-        public Task LogActivityAsync(object value1, object value2, object value3, string v1, string v2, object value4, string v3, string v4)
-        {
-            throw new NotImplementedException("Use the strongly typed version of LogActivityAsync.");
-        }
+        
     }
 }

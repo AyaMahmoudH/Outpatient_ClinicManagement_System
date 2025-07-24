@@ -14,15 +14,18 @@ namespace HospitalManagement.Services
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILoggingService _loggingService;
+        private readonly IMapper _mapper;
 
         public PatientService(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            ILoggingService loggingService)
+            ILoggingService loggingService,
+             IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
             _loggingService = loggingService;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<PatientDTO>> GetAllPatientsAsync()
@@ -31,7 +34,8 @@ namespace HospitalManagement.Services
                 .Include(p => p.User)
                 .ToListAsync();
 
-            return patients.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<PatientDTO>>(patients);
+
         }
 
         public async Task<PatientDTO> GetPatientByIdAsync(int patientId)
@@ -40,7 +44,7 @@ namespace HospitalManagement.Services
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.Id == patientId);
 
-            return patient != null ? MapToDTO(patient) : null;
+            return patient != null ? _mapper.Map<PatientDTO>(patient) : null;
         }
 
         public async Task<PatientDTO> GetPatientByUserIdAsync(string userId)
@@ -49,7 +53,7 @@ namespace HospitalManagement.Services
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.UserId == userId);
 
-            return patient != null ? MapToDTO(patient) : null;
+            return patient != null ? _mapper.Map<PatientDTO>(patient) : null;
         }
 
         public async Task<PatientDTO> CreatePatientAsync(PatientDTO patientDTO)
@@ -124,7 +128,7 @@ namespace HospitalManagement.Services
                 "Patient profile updated",
                 "");
 
-            return MapToDTO(patient);
+            return _mapper.Map<PatientDTO>(patient);
         }
 
         public async Task<bool> DeletePatientAsync(int patientId)
@@ -166,24 +170,6 @@ namespace HospitalManagement.Services
             return true;
         }
 
-        private PatientDTO MapToDTO(Patient patient)
-        {
-            return new PatientDTO
-            {
-                PatientId = patient.Id,
-                FirstName = patient.User.FirstName,
-                LastName = patient.User.LastName,
-                Email = patient.User.Email,
-                PhoneNumber = patient.User.PhoneNumber,
-                EmergencyContact = patient.EmergencyContact,
-                EmergencyContactPhone = patient.EmergencyContactPhone,
-                BloodType = patient.BloodType,
-                Allergies = patient.Allergies,
-                DateOfBirth = patient.DateOfBirth,
-                Address = patient.Address,
-                InsuranceInformation = patient.InsuranceInformation
-            };
-        }
-
+      
     }
 }

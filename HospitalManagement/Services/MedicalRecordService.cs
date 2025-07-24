@@ -14,19 +14,22 @@ namespace HospitalManagement.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly INotificationService _notificationService;
+        private readonly IMapper _mapper;
 
         public MedicalRecordService(
             ApplicationDbContext context,
             ILoggingService loggingService,
             IHttpContextAccessor httpContextAccessor,
             UserManager<ApplicationUser> userManager,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IMapper mapper)
         {
             _context = context;
             _loggingService = loggingService;
             _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
             _notificationService = notificationService;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<MedicalRecordDTO>> GetAllMedicalRecordsAsync()
@@ -38,7 +41,7 @@ namespace HospitalManagement.Services
                     .ThenInclude(d => d.User)
                 .ToListAsync();
 
-            return records.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<MedicalRecordDTO>>(records);
         }
 
         public async Task<MedicalRecordDTO> GetMedicalRecordByIdAsync(int recordId)
@@ -50,7 +53,7 @@ namespace HospitalManagement.Services
                     .ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(r => r.Id == recordId);
 
-            return record != null ? MapToDTO(record) : null;
+            return record != null ? _mapper.Map<MedicalRecordDTO>(record) : null;
         }
 
         public async Task<IEnumerable<MedicalRecordDTO>> GetMedicalRecordsByPatientIdAsync(int patientId)
@@ -63,7 +66,7 @@ namespace HospitalManagement.Services
                 .Where(r => r.PatientId == patientId)
                 .ToListAsync();
 
-            return records.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<MedicalRecordDTO>>(records);
         }
 
         public async Task<IEnumerable<MedicalRecordDTO>> GetMedicalRecordsByDoctorIdAsync(int doctorId)
@@ -76,7 +79,7 @@ namespace HospitalManagement.Services
                 .Where(r => r.DoctorId == doctorId)
                 .ToListAsync();
 
-            return records.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<MedicalRecordDTO>>(records);
         }
 
         public async Task<MedicalRecordDTO> CreateMedicalRecordAsync(MedicalRecordDTO recordDTO)
@@ -110,14 +113,12 @@ namespace HospitalManagement.Services
                 $"Medical record created for patient {recordDTO.PatientId}",
                 _httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "");
 
-            // Get patient's user ID for notification
             var patient = await _context.Patients
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.Id == recordDTO.PatientId);
 
             if (patient != null)
             {
-                // Send notification to patient about new medical record
                 await _notificationService.CreateNotificationAsync(
                     patient.UserId,
                     "A new medical record has been added to your profile.",
@@ -213,23 +214,7 @@ namespace HospitalManagement.Services
             return true;
         }
 
-        private MedicalRecordDTO MapToDTO(MedicalRecord record)
-        {
-            return new MedicalRecordDTO
-            {
-                Id = record.Id,
-                PatientId = record.PatientId,
-                PatientName = $"{record.Patient?.User?.FirstName} {record.Patient?.User?.LastName}",
-                DoctorId = record.DoctorId,
-                DoctorName = $"{record.Doctor?.User?.FirstName} {record.Doctor?.User?.LastName}",
-                RecordDate = record.RecordDate,
-                Diagnosis = record.Diagnosis,
-                Treatment = record.Treatment,
-                Prescription = record.Prescription,
-                Notes = record.Notes,
-                FollowUpInstructions = record.FollowUpInstructions
-            };
-        }
+       
         public async Task<IEnumerable<MedicalRecordDTO>> GetMyMedicalRecordsAsync()
         {
             var currentUser = await GetCurrentUser();
@@ -239,7 +224,6 @@ namespace HospitalManagement.Services
                 return null;
             }
 
-            // العثور على المريض المتعلق بالمستخدم الحالي
             var patient = await _context.Patients
                 .FirstOrDefaultAsync(p => p.UserId == currentUser.Id);
 
@@ -256,7 +240,7 @@ namespace HospitalManagement.Services
                     .ThenInclude(d => d.User)
                 .ToListAsync();
 
-            return records.Select(MapToDTO);
+            return _mapper.Map<IEnumerable<MedicalRecordDTO>>(records);
         }
         private async Task<ApplicationUser> GetCurrentUser()
         {
